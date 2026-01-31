@@ -10,8 +10,8 @@ The system enforces strict **data persistence** and **score finality**, meaning 
 ## 🚀 Live Deployment Links
 *(Please replace these placeholders with your actual deployment URLs)*
 
-* **Frontend Deployment:** Not yet
-* **Backend Deployment:** Link to Render
+* **Frontend Deployment:** Not yet deployed
+* **Backend Deployment:** https://fsd-35-backend.onrender.com
 
 ---
 
