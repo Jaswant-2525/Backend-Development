@@ -3,15 +3,15 @@
 ## 📌 Project Overview
 This project is an **Internal Evaluation Management System** designed to streamline the process of assessing student submissions. It allows **Administrators** to assign evaluation tasks and **Evaluators** to score them.
 
-The system enforces strict **data persistence** and **score finality**, meaning that once an evaluation is submitted, it is locked and cannot be modified. [cite_start]This ensures the integrity of the evaluation process[cite: 6, 7, 32].
+The system enforces strict **data persistence** and **score finality**, meaning that once an evaluation is submitted, it is locked and cannot be modified. This ensures the integrity of the evaluation process.
 
 ---
 
 ## 🚀 Live Deployment Links
 *(Please replace these placeholders with your actual deployment URLs)*
 
-* **Frontend Deployment:** [Link to Vercel/Netlify]
-* **Backend Deployment:** [Link to Render/Heroku/Railways]
+* **Frontend Deployment:** Not yet
+* **Backend Deployment:** Link to Render
 
 ---
 
@@ -27,7 +27,7 @@ This project is built using the **MERN** stack logic (Backend focus provided her
 ---
 
 ## 👥 User Roles & Permissions
-[cite_start]The system implements Role-Based Access Control (RBAC) with two distinct roles[cite: 8, 22]:
+The system implements Role-Based Access Control (RBAC) with two distinct roles:
 
 ### 1. ADMIN
 * **Register/Login:** Secure access to the dashboard.
@@ -38,7 +38,7 @@ This project is built using the **MERN** stack logic (Backend focus provided her
 * **Register/Login:** Secure access to their personal dashboard.
 * **View Assigned Tasks:** Can only see submissions specifically assigned to them.
 * **Submit Evaluation:** Can enter a score and remarks for a student.
-* [cite_start]**Finality Rule:** Once a score is submitted, the record is marked `isFinal: true` and cannot be edited again[cite: 32].
+* **Finality Rule:** Once a score is submitted, the record is marked `isFinal: true` and cannot be edited again.
 
 ---
 
