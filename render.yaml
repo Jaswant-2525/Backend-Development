@@ -1,4 +1,5 @@
 services:
+  # --- Backend Service (Already Exists) ---
   - type: web
     name: fsd-35-backend
     env: node
@@ -12,3 +13,13 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+
+  # --- Frontend Service (ADD THIS PART) ---
+  - type: static
+    name: fsd-35-frontend
+    env: static
+    plan: free
+    # No build command needed for plain HTML/CSS/JS
+    buildCommand: ""
+    # This tells Render your files are in the 'frontend' folder
+    staticPublishPath: ./frontend
