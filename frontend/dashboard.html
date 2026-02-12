@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body onload="initDashboard()">
+    <nav>
+        <h2>Evaluation System</h2>
+        <span id="user-display">User</span>
+        <button onclick="logout()" class="logout-btn">Logout</button>
+    </nav>
+
+    <div class="container">
+        <div id="admin-view" class="hidden">
+            <h3>Admin Dashboard</h3>
+            
+            <div class="card">
+                <h4>Assign New Task</h4>
+                <div class="form-group">
+                    <input type="text" id="task-student" placeholder="Student Name">
+                    <input type="text" id="task-subject" placeholder="Subject">
+                    <input type="text" id="task-evaluator-id" placeholder="Evaluator ID (Check Console/DB)">
+                    <button onclick="assignTask()">Assign Task</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h4>All Evaluations</h4>
+                <table id="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Subject</th>
+                            <th>Evaluator</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="evaluator-view" class="hidden">
+            <h3>My Assigned Tasks</h3>
+            <div id="evaluator-cards" class="grid-container">
+                </div>
+        </div>
+    </div>
+
+    <div id="eval-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Evaluate Student</h3>
+            <input type="hidden" id="modal-submission-id">
+            <label>Score (0-100):</label>
+            <input type="number" id="eval-score" min="0" max="100">
+            <label>Remarks:</label>
+            <textarea id="eval-remarks"></textarea>
+            <button onclick="submitEvaluation()">Submit Final Score</button>
+            <p class="warning">⚠️ Warning: Once submitted, scores cannot be changed.</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
