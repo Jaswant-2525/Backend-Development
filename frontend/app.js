@@ -58,7 +58,8 @@ async function login() {
 
 function logout() {
     localStorage.clear();
-    window.location.href = 'index.html';
+    // Change 'index.html' to '/' to reliably find the home page on Render
+    window.location.href = '/';
 }
 
 // --- DASHBOARD LOGIC ---
