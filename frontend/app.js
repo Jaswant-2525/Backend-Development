@@ -1,4 +1,4 @@
-const API_URL = "https://fsd-35-backend.onrender.com";
+const API_URL = "https://fsd-35-backend.onrender.com/api";
 
 // --- AUTHENTICATION ---
 
