@@ -14,13 +14,18 @@ The system enforces strict **data persistence** and **score finality**, meaning 
 ---
 
 ## 🛠 Tech Stack
-This project is built using the **MERN** stack logic (Backend focus provided here):
 
+### Frontend
+* **HTML5:** Semantic structure for the dashboard and auth pages.
+* **CSS3:** Modern UI with responsive design, glassmorphism effects, and gradient typography.
+* **JavaScript (Vanilla):** DOM manipulation and `fetch` API for backend communication.
+
+### Backend
 * **Runtime Environment:** Node.js
 * **Framework:** Express.js
 * **Database:** MongoDB (Mongoose ODM)
 * **Authentication:** JWT (JSON Web Tokens)
-* **Security:** Bcrypt.js for password hashing, CORS, Environment Variables
+* **Security:** Bcrypt.js for hashing, CORS protection, Environment Variables.
 
 ---
 
