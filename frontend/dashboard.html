@@ -10,10 +10,12 @@
     <nav>
         <h2>Evaluation System</h2>
         <span id="user-display">User</span>
+        <button onclick="openProfileModal()" class="profile-btn">Profile</button>
         <button onclick="logout()" class="logout-btn">Logout</button>
     </nav>
 
     <div class="container">
+        <!-- ========== ADMIN VIEW ========== -->
         <div id="admin-view" class="hidden">
             <h3>Admin Dashboard</h3>
             
@@ -22,21 +24,36 @@
                 <div class="form-group">
                     <input type="text" id="task-student" placeholder="Student Name">
                     <input type="text" id="task-subject" placeholder="Subject">
-                    <input type="text" id="task-evaluator-id" placeholder="Evaluator ID (Check Console/DB)">
+                    <input type="text" id="task-evaluator-id" placeholder="Evaluator ID">
+                    <input type="text" id="task-student-id" placeholder="Student User ID (optional)">
                     <button onclick="assignTask()">Assign Task</button>
                 </div>
             </div>
 
             <div class="card">
                 <h4>All Evaluations</h4>
+                <!-- Search & Filter Controls -->
+                <div class="filter-bar">
+                    <input type="text" id="search-input" placeholder="Search by student name..." oninput="loadAdminData()">
+                    <select id="status-filter" onchange="loadAdminData()">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                    <button class="csv-btn" onclick="downloadCSV()">⬇ Download Report</button>
+                </div>
                 <table id="admin-table">
                     <thead>
                         <tr>
                             <th>Student</th>
                             <th>Subject</th>
                             <th>Evaluator</th>
-                            <th>Score</th>
+                            <th>Logic</th>
+                            <th>Quality</th>
+                            <th>Viva</th>
+                            <th>Total</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="admin-table-body"></tbody>
@@ -44,24 +61,66 @@
             </div>
         </div>
 
+        <!-- ========== EVALUATOR VIEW ========== -->
         <div id="evaluator-view" class="hidden">
             <h3>My Assigned Tasks</h3>
             <div id="evaluator-cards" class="grid-container">
-                </div>
+            </div>
+        </div>
+
+        <!-- ========== STUDENT VIEW ========== -->
+        <div id="student-view" class="hidden">
+            <h3>My Scores</h3>
+            <div class="card">
+                <table id="student-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Evaluator</th>
+                            <th>Logic</th>
+                            <th>Quality</th>
+                            <th>Viva</th>
+                            <th>Total</th>
+                            <th>Remarks</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-table-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- ========== EVALUATION MODAL (Rubric) ========== -->
     <div id="eval-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Evaluate Student</h3>
             <input type="hidden" id="modal-submission-id">
-            <label>Score (0-100):</label>
-            <input type="number" id="eval-score" min="0" max="100">
+            <label>Logic (0-40):</label>
+            <input type="number" id="eval-logic" min="0" max="40" oninput="calcTotal()">
+            <label>Code Quality (0-30):</label>
+            <input type="number" id="eval-quality" min="0" max="30" oninput="calcTotal()">
+            <label>Viva (0-30):</label>
+            <input type="number" id="eval-viva" min="0" max="30" oninput="calcTotal()">
+            <div class="total-display">Total: <span id="eval-total">0</span> / 100</div>
             <label>Remarks:</label>
             <textarea id="eval-remarks"></textarea>
             <button onclick="submitEvaluation()">Submit Final Score</button>
             <p class="warning">⚠️ Warning: Once submitted, scores cannot be changed.</p>
+        </div>
+    </div>
+
+    <!-- ========== PROFILE / PASSWORD MODAL ========== -->
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeProfileModal()">&times;</span>
+            <h3>Change Password</h3>
+            <label>Current Password:</label>
+            <input type="password" id="old-password" placeholder="Enter current password">
+            <label>New Password:</label>
+            <input type="password" id="new-password" placeholder="Enter new password">
+            <button onclick="changePassword()">Update Password</button>
         </div>
     </div>
 

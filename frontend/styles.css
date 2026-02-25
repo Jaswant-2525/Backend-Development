@@ -367,8 +367,104 @@ td:nth-child(4) {
 /* --- UTILITIES --- */
 .hidden { display: none !important; }
 .error-msg { color: #ff7675; margin-top: 10px; font-weight: 500; }
+.text-muted { color: #b2bec3; font-size: 0.85rem; }
 
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- FILTER BAR (Search + Dropdown + CSV) --- */
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-bar input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    margin: 0;
+}
+
+.filter-bar select {
+    width: 180px;
+    margin: 0;
+}
+
+.csv-btn {
+    width: auto;
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    margin: 0;
+    font-size: 0.9rem;
+    border-radius: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 184, 148, 0.25);
+    white-space: nowrap;
+}
+
+.csv-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 184, 148, 0.35);
+}
+
+/* --- PROFILE BUTTON (Nav) --- */
+.profile-btn {
+    width: auto;
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    margin-left: 12px;
+    margin-top: 0;
+    font-size: 0.95rem;
+    border-radius: 50px;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+.profile-btn:hover {
+    background: #5b4cdb;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+}
+
+/* --- UNLOCK BUTTON --- */
+.unlock-btn {
+    width: auto;
+    padding: 8px 18px;
+    margin: 0;
+    font-size: 0.8rem;
+    background: #fdcb6e;
+    color: #2d3436;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(253, 203, 110, 0.3);
+}
+
+.unlock-btn:hover {
+    background: #f9c846;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(253, 203, 110, 0.45);
+}
+
+/* --- TOTAL DISPLAY (Rubric Modal) --- */
+.total-display {
+    background: linear-gradient(135deg, #dfe6e9, #ffeaa7);
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 12px 0;
+    color: #2d3436;
+    letter-spacing: 0.5px;
 }

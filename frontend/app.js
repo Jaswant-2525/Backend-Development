@@ -19,13 +19,12 @@ async function register() {
             body: JSON.stringify({ username, password, role })
         });
 
-        const data = await res.json(); // Get the backend response
+        const data = await res.json();
 
         if (res.ok) {
             alert("Registration successful! Please login.");
             toggleAuth();
         } else {
-            // This will show you exactly what went wrong (e.g., "User already exists")
             alert("Registration Failed: " + (data.error || data.message));
         }
     } catch (error) {
@@ -58,8 +57,7 @@ async function login() {
 
 function logout() {
     localStorage.clear();
-    // Change 'index.html' to '/' to reliably find the home page on Render
-    window.location.href = '/';
+    window.location.href = 'index.html';
 }
 
 // --- DASHBOARD LOGIC ---
@@ -76,36 +74,63 @@ function initDashboard() {
 
     document.getElementById('user-display').innerText = `${username} (${role})`;
 
-    // Show appropriate view based on role
     if (role === 'ADMIN') {
         document.getElementById('admin-view').classList.remove('hidden');
         loadAdminData();
     } else if (role === 'EVALUATOR') {
         document.getElementById('evaluator-view').classList.remove('hidden');
         loadEvaluatorData();
+    } else if (role === 'STUDENT') {
+        document.getElementById('student-view').classList.remove('hidden');
+        loadStudentData();
     }
 }
 
 // --- ADMIN FUNCTIONS ---
 
+// Store current data for CSV export
+let currentAdminData = [];
+
 async function loadAdminData() {
-    const res = await fetch(`${API_URL}/evaluation/all`, {
+    const search = document.getElementById('search-input')?.value || '';
+    const status = document.getElementById('status-filter')?.value || '';
+
+    let url = `${API_URL}/evaluation/all?`;
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    if (status) url += `status=${encodeURIComponent(status)}&`;
+
+    const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     const evaluations = await res.json();
-    
+    currentAdminData = evaluations;
+
     const tbody = document.getElementById('admin-table-body');
     tbody.innerHTML = '';
 
     evaluations.forEach(ev => {
+        const scoreObj = ev.score;
+        const logic = scoreObj ? (scoreObj.logic ?? '-') : '-';
+        const quality = scoreObj ? (scoreObj.quality ?? '-') : '-';
+        const viva = scoreObj ? (scoreObj.viva ?? '-') : '-';
+        const total = scoreObj ? (scoreObj.total ?? '-') : '-';
+
+        const unlockBtn = ev.isFinal
+            ? `<button class="unlock-btn" onclick="unlockSubmission('${ev._id}')">🔓 Unlock</button>`
+            : '<span class="text-muted">—</span>';
+
         const row = `<tr>
             <td>${ev.studentName}</td>
             <td>${ev.subject}</td>
             <td>${ev.assignedTo ? ev.assignedTo.username : 'Unknown'}</td>
-            <td>${ev.isFinal ? ev.score : '-'}</td>
+            <td>${ev.isFinal ? logic : '-'}</td>
+            <td>${ev.isFinal ? quality : '-'}</td>
+            <td>${ev.isFinal ? viva : '-'}</td>
+            <td>${ev.isFinal ? total : '-'}</td>
             <td class="${ev.isFinal ? 'status-final' : 'status-pending'}">
                 ${ev.isFinal ? 'Completed' : 'Pending'}
             </td>
+            <td>${unlockBtn}</td>
         </tr>`;
         tbody.innerHTML += row;
     });
@@ -115,22 +140,81 @@ async function assignTask() {
     const studentName = document.getElementById('task-student').value;
     const subject = document.getElementById('task-subject').value;
     const assignedTo = document.getElementById('task-evaluator-id').value;
+    const studentId = document.getElementById('task-student-id')?.value || '';
+
+    const body = { studentName, subject, assignedTo };
+    if (studentId) body.studentId = studentId;
 
     const res = await fetch(`${API_URL}/evaluation/assign`, {
         method: 'POST',
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ studentName, subject, assignedTo })
+        body: JSON.stringify(body)
     });
 
     if (res.ok) {
         alert("Task assigned successfully!");
-        loadAdminData(); // Refresh list
+        loadAdminData();
     } else {
         alert("Failed to assign task. Check Evaluator ID.");
     }
+}
+
+// --- UNLOCK (Re-Evaluation) ---
+
+async function unlockSubmission(id) {
+    if (!confirm('Are you sure you want to unlock this submission for re-evaluation?')) return;
+
+    const res = await fetch(`${API_URL}/evaluation/unlock/${id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+
+    if (res.ok) {
+        alert("Submission unlocked for re-evaluation!");
+        loadAdminData();
+    } else {
+        const err = await res.json();
+        alert("Error: " + err.message);
+    }
+}
+
+// --- CSV EXPORT ---
+
+function downloadCSV() {
+    if (!currentAdminData.length) {
+        alert("No data to export.");
+        return;
+    }
+
+    const headers = ['Student', 'Subject', 'Evaluator', 'Logic', 'Quality', 'Viva', 'Total', 'Remarks', 'Status'];
+    const rows = currentAdminData.map(ev => {
+        const scoreObj = ev.score;
+        return [
+            ev.studentName,
+            ev.subject,
+            ev.assignedTo ? ev.assignedTo.username : 'Unknown',
+            scoreObj ? (scoreObj.logic ?? '') : '',
+            scoreObj ? (scoreObj.quality ?? '') : '',
+            scoreObj ? (scoreObj.viva ?? '') : '',
+            scoreObj ? (scoreObj.total ?? '') : '',
+            `"${(ev.remarks || '').replace(/"/g, '""')}"`,
+            ev.isFinal ? 'Completed' : 'Pending'
+        ];
+    });
+
+    let csv = headers.join(',') + '\n';
+    rows.forEach(r => csv += r.join(',') + '\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `evaluation_report_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
 }
 
 // --- EVALUATOR FUNCTIONS ---
@@ -145,26 +229,72 @@ async function loadEvaluatorData() {
     container.innerHTML = '';
 
     tasks.forEach(task => {
-        // If final, disable button. If not, enable it.
+        const scoreObj = task.score;
+        const totalDisplay = scoreObj ? scoreObj.total : '-';
+
         const btnState = task.isFinal ? 'disabled style="background:grey"' : `onclick="openModal('${task._id}')"`;
         const btnText = task.isFinal ? 'Completed' : 'Evaluate';
+
+        const rubricInfo = task.isFinal && scoreObj
+            ? `<p>Logic: ${scoreObj.logic} | Quality: ${scoreObj.quality} | Viva: ${scoreObj.viva}</p>`
+            : '';
 
         const card = `
         <div class="card">
             <h4>${task.studentName}</h4>
             <p>Subject: ${task.subject}</p>
             <p>Status: <span class="${task.isFinal ? 'status-final' : 'status-pending'}">${task.isFinal ? 'Finalized' : 'Pending'}</span></p>
-            <p>Score: ${task.score !== null ? task.score : '-'}</p>
+            <p>Total Score: ${task.isFinal ? totalDisplay : '-'}</p>
+            ${rubricInfo}
             <button ${btnState}>${btnText}</button>
         </div>`;
         container.innerHTML += card;
     });
 }
 
-// --- MODAL & SUBMISSION ---
+// --- STUDENT FUNCTIONS ---
+
+async function loadStudentData() {
+    const res = await fetch(`${API_URL}/evaluation/my-scores`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    const scores = await res.json();
+
+    const tbody = document.getElementById('student-table-body');
+    tbody.innerHTML = '';
+
+    scores.forEach(ev => {
+        const scoreObj = ev.score;
+        const logic = scoreObj ? (scoreObj.logic ?? '-') : '-';
+        const quality = scoreObj ? (scoreObj.quality ?? '-') : '-';
+        const viva = scoreObj ? (scoreObj.viva ?? '-') : '-';
+        const total = scoreObj ? (scoreObj.total ?? '-') : '-';
+
+        const row = `<tr>
+            <td>${ev.subject}</td>
+            <td>${ev.assignedTo ? ev.assignedTo.username : 'Unknown'}</td>
+            <td>${ev.isFinal ? logic : '-'}</td>
+            <td>${ev.isFinal ? quality : '-'}</td>
+            <td>${ev.isFinal ? viva : '-'}</td>
+            <td>${ev.isFinal ? total : '-'}</td>
+            <td>${ev.remarks || '-'}</td>
+            <td class="${ev.isFinal ? 'status-final' : 'status-pending'}">
+                ${ev.isFinal ? 'Completed' : 'Pending'}
+            </td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+
+// --- EVALUATION MODAL & SUBMISSION (Rubric) ---
 
 function openModal(id) {
     document.getElementById('modal-submission-id').value = id;
+    document.getElementById('eval-logic').value = '';
+    document.getElementById('eval-quality').value = '';
+    document.getElementById('eval-viva').value = '';
+    document.getElementById('eval-total').innerText = '0';
+    document.getElementById('eval-remarks').value = '';
     document.getElementById('eval-modal').classList.remove('hidden');
 }
 
@@ -172,14 +302,30 @@ function closeModal() {
     document.getElementById('eval-modal').classList.add('hidden');
 }
 
+function calcTotal() {
+    const logic = parseInt(document.getElementById('eval-logic').value) || 0;
+    const quality = parseInt(document.getElementById('eval-quality').value) || 0;
+    const viva = parseInt(document.getElementById('eval-viva').value) || 0;
+    document.getElementById('eval-total').innerText = logic + quality + viva;
+}
+
 async function submitEvaluation() {
     const id = document.getElementById('modal-submission-id').value;
-    const score = document.getElementById('eval-score').value;
+    const logic = parseInt(document.getElementById('eval-logic').value) || 0;
+    const quality = parseInt(document.getElementById('eval-quality').value) || 0;
+    const viva = parseInt(document.getElementById('eval-viva').value) || 0;
     const remarks = document.getElementById('eval-remarks').value;
+
+    const score = {
+        logic,
+        quality,
+        viva,
+        total: logic + quality + viva
+    };
 
     const res = await fetch(`${API_URL}/evaluation/evaluate/${id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -189,9 +335,49 @@ async function submitEvaluation() {
     if (res.ok) {
         alert("Evaluation submitted successfully!");
         closeModal();
-        loadEvaluatorData(); // Refresh UI to lock the button
+        loadEvaluatorData();
     } else {
         const err = await res.json();
-        alert("Error: " + err.message); // Should show "Evaluation is final" if they try to hack it
+        alert("Error: " + err.message);
+    }
+}
+
+// --- PROFILE MODAL (Change Password) ---
+
+function openProfileModal() {
+    document.getElementById('old-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('profile-modal').classList.remove('hidden');
+}
+
+function closeProfileModal() {
+    document.getElementById('profile-modal').classList.add('hidden');
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById('old-password').value;
+    const newPassword = document.getElementById('new-password').value;
+
+    if (!oldPassword || !newPassword) {
+        alert("Please fill in both fields.");
+        return;
+    }
+
+    const res = await fetch(`${API_URL}/auth/update-password`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ oldPassword, newPassword })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        alert(data.message);
+        closeProfileModal();
+    } else {
+        alert("Error: " + (data.message || data.error));
     }
 }

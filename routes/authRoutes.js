@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js'; 
+import { auth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -33,6 +34,29 @@ router.post('/login', async (req, res) => {
         );
 
         res.json({ token, role: user.role });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Profile Management - Update Password
+router.put('/update-password', auth, async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    try {
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Both old and new passwords are required' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Old password is incorrect' });
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

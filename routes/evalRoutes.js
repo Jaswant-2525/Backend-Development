@@ -1,13 +1,15 @@
 import express from 'express';
 import Submission from '../models/Submission.js';
+import User from '../models/User.js';
 import { auth, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Assign task (Admin only) - now supports optional studentId
 router.post('/assign', auth, authorize(['ADMIN']), async (req, res) => {
     try {
-        const { studentName, subject, assignedTo } = req.body;
-        const newSubmission = new Submission({ studentName, subject, assignedTo });
+        const { studentName, subject, assignedTo, studentId } = req.body;
+        const newSubmission = new Submission({ studentName, subject, assignedTo, studentId: studentId || null });
         await newSubmission.save();
         res.status(201).json(newSubmission);
     } catch (err) {
@@ -15,15 +17,34 @@ router.post('/assign', auth, authorize(['ADMIN']), async (req, res) => {
     }
 });
 
+// Get all evaluations (Admin) - with search & filter support
 router.get('/all', auth, authorize(['ADMIN']), async (req, res) => {
     try {
-        const evaluations = await Submission.find().populate('assignedTo', 'username');
+        const { search, status } = req.query;
+        let filter = {};
+
+        // Search by student name (case-insensitive)
+        if (search) {
+            filter.studentName = { $regex: search, $options: 'i' };
+        }
+
+        // Filter by status
+        if (status === 'Pending') {
+            filter.isFinal = false;
+        } else if (status === 'Completed') {
+            filter.isFinal = true;
+        }
+
+        const evaluations = await Submission.find(filter)
+            .populate('assignedTo', 'username')
+            .populate('studentId', 'username');
         res.json(evaluations);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
+// Get assigned tasks (Evaluator)
 router.get('/assigned', auth, authorize(['EVALUATOR']), async (req, res) => {
     try {
         const mySubmissions = await Submission.find({ assignedTo: req.user.id });
@@ -33,6 +54,18 @@ router.get('/assigned', auth, authorize(['EVALUATOR']), async (req, res) => {
     }
 });
 
+// Get student's own scores (Student)
+router.get('/my-scores', auth, authorize(['STUDENT']), async (req, res) => {
+    try {
+        const myScores = await Submission.find({ studentId: req.user.id })
+            .populate('assignedTo', 'username');
+        res.json(myScores);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Submit evaluation with rubric scores (Evaluator)
 router.put('/evaluate/:id', auth, authorize(['EVALUATOR']), async (req, res) => {
     const { score, remarks } = req.body;
     try {
@@ -43,16 +76,42 @@ router.put('/evaluate/:id', auth, authorize(['EVALUATOR']), async (req, res) => 
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        if (submission.isFinal) { // [cite: 32, 33]
+        if (submission.isFinal) {
             return res.status(400).json({ message: 'Evaluation is final.' });
         }
 
-        submission.score = score;
+        // Support both rubric object and legacy single number
+        if (typeof score === 'object' && score !== null) {
+            submission.score = {
+                logic: score.logic || 0,
+                quality: score.quality || 0,
+                viva: score.viva || 0,
+                total: (score.logic || 0) + (score.quality || 0) + (score.viva || 0)
+            };
+        } else {
+            submission.score = { logic: 0, quality: 0, viva: 0, total: Number(score) || 0 };
+        }
+
         submission.remarks = remarks;
-        submission.isFinal = true; 
+        submission.isFinal = true;
 
         await submission.save();
         res.json({ message: 'Submitted successfully', submission });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Unlock (re-evaluate) a finalized submission (Admin only)
+router.put('/unlock/:id', auth, authorize(['ADMIN']), async (req, res) => {
+    try {
+        const submission = await Submission.findById(req.params.id);
+        if (!submission) return res.status(404).json({ message: 'Not found' });
+
+        submission.isFinal = false;
+        await submission.save();
+
+        res.json({ message: 'Submission unlocked for re-evaluation', submission });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
