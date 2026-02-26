@@ -1,47 +1,60 @@
 # Internal Evaluation Management System (FSD-35)
 
 ## 📌 Project Overview
-This project is an **Internal Evaluation Management System** designed to streamline the process of assessing student submissions. It allows **Administrators** to assign evaluation tasks and **Evaluators** to score them.
+This project is a comprehensive **Full-Stack Internal Evaluation Management System** designed to streamline and automate the process of assessing student submissions. 
 
-The system enforces strict **data persistence** and **score finality**, meaning that once an evaluation is submitted, it is locked and cannot be modified. This ensures the integrity of the evaluation process.
+Built with scalability and security in mind, the system supports a 3-tier Role-Based Access Control (RBAC) architecture, enabling **Administrators** to assign and monitor tasks, **Evaluators** to grade submissions using detailed rubrics, and **Students** to view their finalized results. The system enforces strict **data persistence**, **deadline management**, and **score finality** to ensure the integrity of the evaluation process.
 
 ---
 
-## 🚀 Live Deployment Links
+## 🚀 Live Deployment
 
-**Frontend Deployment + Backend Deployment:** https://fsd-35-frontend.onrender.com
+* **🌐 Live Application:** [https://fsd-35-frontend.onrender.com](https://fsd-35-frontend.onrender.com)
+
+---
+
+## ✨ Key Features
+* **Advanced Analytics Dashboard:** Visualizes evaluation progress and calculates average scores per subject using MongoDB Aggregation Pipelines and Chart.js.
+* **Role-Based Access Control (RBAC):** Secure routing and tailored dashboards for Admins, Evaluators, and Students.
+* **Deadline Enforcement:** Automated system locking prevents evaluations from being submitted past the assigned due date.
+* **Detailed Grading Rubrics:** Replaces single-number scores with granular breakdowns (Logic, Quality, Viva, Total).
+* **Data Export:** Built-in capability for Administrators to export evaluation data to CSV files for offline processing.
+* **Search & Filtering:** Dynamic, real-time table filtering by student name, subject, or completion status.
 
 ---
 
 ## 🛠 Tech Stack
 
 ### Frontend
-* **HTML5:** Semantic structure for the dashboard and auth pages.
-* **CSS3:** Modern UI with responsive design, glassmorphism effects, and gradient typography.
-* **JavaScript (Vanilla):** DOM manipulation and `fetch` API for backend communication.
+* **HTML5 / CSS3:** Modern, responsive UI with glassmorphism effects and gradient typography.
+* **JavaScript (Vanilla):** Client-side routing, DOM manipulation, and secure `fetch` API integration.
+* **Chart.js:** Data visualization for the Admin analytics dashboard.
 
 ### Backend
 * **Runtime Environment:** Node.js
 * **Framework:** Express.js
 * **Database:** MongoDB (Mongoose ODM)
 * **Authentication:** JWT (JSON Web Tokens)
-* **Security:** Bcrypt.js for hashing, CORS protection, Environment Variables.
+* **Security:** Bcrypt.js for secure password hashing, CORS protection, Environment Variables.
 
 ---
 
 ## 👥 User Roles & Permissions
-The system implements Role-Based Access Control (RBAC) with two distinct roles:
 
-### 1. ADMIN
-* **Register/Login:** Secure access to the dashboard.
-* **Manage Assignments:** Can create new submission records and assign them to specific Evaluators.
-* **View All:** Access to view all evaluation records and their current status.
+### 1. ADMIN (System Administrators)
+* **Analytics Dashboard:** View high-level metrics (Total, Pending, Completed) and average score bar charts.
+* **Manage Assignments:** Create submissions, assign them to Evaluators, and set strict **Due Dates**.
+* **System Override:** Can unlock finalized submissions for re-evaluation if required.
+* **Data Management:** View all records, search/filter, and export data to CSV.
 
-### 2. EVALUATOR
-* **Register/Login:** Secure access to their personal dashboard.
-* **View Assigned Tasks:** Can only see submissions specifically assigned to them.
-* **Submit Evaluation:** Can enter a score and remarks for a student.
-* **Finality Rule:** Once a score is submitted, the record is marked `isFinal: true` and cannot be edited again.
+### 2. EVALUATOR (Staff / Graders)
+* **Task Management:** View only tasks specifically assigned to them.
+* **Strict Deadlines:** Tasks are automatically locked if the due date has passed.
+* **Detailed Evaluation:** Submit scores using a specific rubric (Logic, Quality, Viva).
+* **Finality Rule:** Once submitted, the record is locked (`isFinal: true`) and cannot be altered by the Evaluator.
+
+### 3. STUDENT (End Users)
+* **Read-Only Dashboard:** Securely log in to view personal, finalized evaluation results and remarks.
 
 ---
 
@@ -51,38 +64,44 @@ The system implements Role-Based Access Control (RBAC) with two distinct roles:
 Stores credential and role information.
 * `username`: String (Unique)
 * `password`: String (Hashed)
-* `role`: String (Enum: 'ADMIN', 'EVALUATOR')
+* `role`: String (Enum: `'ADMIN'`, `'EVALUATOR'`, `'STUDENT'`)
 
 ### Submissions Collection (`submissions`)
-Stores the evaluation data.
+Stores the evaluation data, relational links, and rubric scores.
 * `studentName`: String
+* `studentId`: ObjectId (Reference to User, default: null)
 * `subject`: String
 * `assignedTo`: ObjectId (Reference to User)
-* `score`: Number (Default: null)
+* `dueDate`: Date
+* `score`: Object (`logic`, `quality`, `viva`, `total`)
 * `remarks`: String
-* `isFinal`: Boolean (Default: false) - **Critical for enforcing immutability**
+* `isFinal`: Boolean (Default: false)
 
 ---
 
 ## 🔌 API Endpoints
 
-### Authentication
+### Authentication & Profile
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register a new user (Admin/Evaluator) | Public |
-| `POST` | `/api/auth/login` | Login and receive JWT token | Public |
+| `POST` | `/api/auth/register` | Register a new user | Public |
+| `POST` | `/api/auth/login` | Authenticate and receive JWT | Public |
+| `PUT` | `/api/auth/update-password` | Update account password | Authenticated |
 
 ### Evaluation Management
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/evaluation/assign` | Create a new task & assign to evaluator | **Admin Only** |
-| `GET` | `/api/evaluation/all` | View all evaluation records | **Admin Only** |
-| `GET` | `/api/evaluation/assigned` | View tasks assigned to the logged-in user | **Evaluator Only** |
-| `PUT` | `/api/evaluation/evaluate/:id` | Submit score & remarks (One-time only) | **Evaluator Only** |
+| `GET` | `/api/evaluation/stats` | Fetch aggregation data for charts | **Admin** |
+| `GET` | `/api/evaluation/all` | View all evaluation records (w/ query filters) | **Admin** |
+| `POST` | `/api/evaluation/assign` | Create task, set deadline, assign evaluator | **Admin** |
+| `PUT` | `/api/evaluation/unlock/:id`| Unlock a finalized submission | **Admin** |
+| `GET` | `/api/evaluation/assigned` | View tasks assigned to the logged-in user | **Evaluator** |
+| `PUT` | `/api/evaluation/evaluate/:id`| Submit rubric scores (Blocked if overdue) | **Evaluator** |
+| `GET` | `/api/evaluation/my-results` | View personal finalized scores | **Student** |
 
 ---
 
-## ⚙️ Setup & Installation
+## ⚙️ Setup & Installation (Local Development)
 
 1.  **Clone the repository:**
     ```bash
@@ -105,9 +124,12 @@ Stores the evaluation data.
 
 4.  **Run the Server:**
     ```bash
-    # Development mode
+    # Development mode (Nodemon)
     npm run dev
 
     # Production mode
     npm start
     ```
+
+5.  **Run the Frontend:**
+    Open `frontend/index.html` via Live Server or any local static file server. *(Ensure `API_URL` in `app.js` is pointed to `http://localhost:5000/api` for local testing).*
