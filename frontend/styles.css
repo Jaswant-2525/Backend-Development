@@ -468,3 +468,94 @@ td:nth-child(4) {
     color: #2d3436;
     letter-spacing: 0.5px;
 }
+
+/* --- ANALYTICS SECTION --- */
+.analytics-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+    text-align: center;
+    animation: fadeUp 0.5s ease-out;
+}
+
+.stat-card .stat-number {
+    font-size: 2.8rem;
+    font-weight: 800;
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 6px;
+}
+
+.stat-card.stat-pending .stat-number {
+    background: linear-gradient(135deg, #e17055, #fdcb6e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.stat-card.stat-completed .stat-number {
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-card canvas {
+    max-height: 300px;
+    width: 100% !important;
+}
+
+/* --- OVERDUE BADGE --- */
+.status-overdue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    color: #d63031;
+    background: rgba(214, 48, 49, 0.1);
+    padding: 0 16px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 10px rgba(214, 48, 49, 0.15);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}

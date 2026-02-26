@@ -5,6 +5,7 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body onload="initDashboard()">
     <nav>
@@ -18,6 +19,33 @@
         <!-- ========== ADMIN VIEW ========== -->
         <div id="admin-view" class="hidden">
             <h3>Admin Dashboard</h3>
+
+            <!-- ========== ANALYTICS SECTION ========== -->
+            <div class="analytics-row">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-total">0</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card stat-pending">
+                    <div class="stat-number" id="stat-pending">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card stat-completed">
+                    <div class="stat-number" id="stat-completed">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="card chart-card">
+                    <h4>Task Status</h4>
+                    <canvas id="pieChart"></canvas>
+                </div>
+                <div class="card chart-card">
+                    <h4>Average Score by Subject</h4>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
             
             <div class="card">
                 <h4>Assign New Task</h4>
@@ -26,6 +54,8 @@
                     <input type="text" id="task-subject" placeholder="Subject">
                     <input type="text" id="task-evaluator-id" placeholder="Evaluator ID">
                     <input type="text" id="task-student-id" placeholder="Student User ID (optional)">
+                    <label>Due Date:</label>
+                    <input type="date" id="task-due-date">
                     <button onclick="assignTask()">Assign Task</button>
                 </div>
             </div>
@@ -52,6 +82,7 @@
                             <th>Quality</th>
                             <th>Viva</th>
                             <th>Total</th>
+                            <th>Due Date</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>

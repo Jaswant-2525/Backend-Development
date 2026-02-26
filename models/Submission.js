@@ -23,7 +23,8 @@ const SubmissionSchema = new mongoose.Schema({
         default: null 
     },
     remarks: { type: String, default: "" },
-    isFinal: { type: Boolean, default: false } 
+    isFinal: { type: Boolean, default: false },
+    dueDate: { type: Date, required: true }
 }, { timestamps: true });
 
 export default mongoose.model('Submission', SubmissionSchema);

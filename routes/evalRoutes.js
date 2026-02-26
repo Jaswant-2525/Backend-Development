@@ -5,11 +5,36 @@ import { auth, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Assign task (Admin only) - now supports optional studentId
+// Analytics Dashboard - Aggregated Stats (Admin only)
+router.get('/stats', auth, authorize(['ADMIN']), async (req, res) => {
+    try {
+        const totalTasks = await Submission.countDocuments();
+        const completedTasks = await Submission.countDocuments({ isFinal: true });
+        const pendingTasks = totalTasks - completedTasks;
+
+        const avgBySubject = await Submission.aggregate([
+            { $match: { isFinal: true, 'score.total': { $exists: true } } },
+            { $group: { _id: '$subject', avgScore: { $avg: '$score.total' } } },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json({
+            totalTasks,
+            pendingTasks,
+            completedTasks,
+            avgBySubject
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Assign task (Admin only) - now supports optional studentId and dueDate
 router.post('/assign', auth, authorize(['ADMIN']), async (req, res) => {
     try {
-        const { studentName, subject, assignedTo, studentId } = req.body;
-        const newSubmission = new Submission({ studentName, subject, assignedTo, studentId: studentId || null });
+        const { studentName, subject, assignedTo, studentId, dueDate } = req.body;
+        if (!dueDate) return res.status(400).json({ message: 'Due date is required' });
+        const newSubmission = new Submission({ studentName, subject, assignedTo, studentId: studentId || null, dueDate });
         await newSubmission.save();
         res.status(201).json(newSubmission);
     } catch (err) {
@@ -78,6 +103,11 @@ router.put('/evaluate/:id', auth, authorize(['EVALUATOR']), async (req, res) => 
 
         if (submission.isFinal) {
             return res.status(400).json({ message: 'Evaluation is final.' });
+        }
+
+        // Deadline check - block if past due date
+        if (submission.dueDate && new Date() > new Date(submission.dueDate)) {
+            return res.status(403).json({ message: 'Deadline has passed. Submission is locked.' });
         }
 
         // Support both rubric object and legacy single number

@@ -77,6 +77,7 @@ function initDashboard() {
     if (role === 'ADMIN') {
         document.getElementById('admin-view').classList.remove('hidden');
         loadAdminData();
+        loadAnalytics();
     } else if (role === 'EVALUATOR') {
         document.getElementById('evaluator-view').classList.remove('hidden');
         loadEvaluatorData();
@@ -90,6 +91,78 @@ function initDashboard() {
 
 // Store current data for CSV export
 let currentAdminData = [];
+
+// Chart instances for cleanup
+let pieChartInstance = null;
+let barChartInstance = null;
+
+async function loadAnalytics() {
+    try {
+        const res = await fetch(`${API_URL}/evaluation/stats`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const stats = await res.json();
+
+        // Update stat cards
+        document.getElementById('stat-total').innerText = stats.totalTasks;
+        document.getElementById('stat-pending').innerText = stats.pendingTasks;
+        document.getElementById('stat-completed').innerText = stats.completedTasks;
+
+        // Pie Chart - Pending vs Completed
+        if (pieChartInstance) pieChartInstance.destroy();
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        pieChartInstance = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Pending', 'Completed'],
+                datasets: [{
+                    data: [stats.pendingTasks, stats.completedTasks],
+                    backgroundColor: ['rgba(225, 112, 85, 0.8)', 'rgba(0, 184, 148, 0.8)'],
+                    borderColor: ['#e17055', '#00b894'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 13 }, padding: 20 } }
+                }
+            }
+        });
+
+        // Bar Chart - Average score by subject
+        if (barChartInstance) barChartInstance.destroy();
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        const subjects = stats.avgBySubject.map(s => s._id);
+        const averages = stats.avgBySubject.map(s => Math.round(s.avgScore * 10) / 10);
+        barChartInstance = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: subjects,
+                datasets: [{
+                    label: 'Avg Total Score',
+                    data: averages,
+                    backgroundColor: 'rgba(108, 92, 231, 0.7)',
+                    borderColor: '#6c5ce7',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 100, ticks: { font: { family: 'Poppins' } } },
+                    x: { ticks: { font: { family: 'Poppins' } } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Analytics load error:', err);
+    }
+}
 
 async function loadAdminData() {
     const search = document.getElementById('search-input')?.value || '';
@@ -119,6 +192,9 @@ async function loadAdminData() {
             ? `<button class="unlock-btn" onclick="unlockSubmission('${ev._id}')">🔓 Unlock</button>`
             : '<span class="text-muted">—</span>';
 
+        const dueDateStr = ev.dueDate ? new Date(ev.dueDate).toLocaleDateString() : '-';
+        const isOverdue = ev.dueDate && !ev.isFinal && new Date() > new Date(ev.dueDate);
+
         const row = `<tr>
             <td>${ev.studentName}</td>
             <td>${ev.subject}</td>
@@ -127,6 +203,7 @@ async function loadAdminData() {
             <td>${ev.isFinal ? quality : '-'}</td>
             <td>${ev.isFinal ? viva : '-'}</td>
             <td>${ev.isFinal ? total : '-'}</td>
+            <td>${isOverdue ? `<span class="status-overdue">${dueDateStr}</span>` : dueDateStr}</td>
             <td class="${ev.isFinal ? 'status-final' : 'status-pending'}">
                 ${ev.isFinal ? 'Completed' : 'Pending'}
             </td>
@@ -141,8 +218,14 @@ async function assignTask() {
     const subject = document.getElementById('task-subject').value;
     const assignedTo = document.getElementById('task-evaluator-id').value;
     const studentId = document.getElementById('task-student-id')?.value || '';
+    const dueDate = document.getElementById('task-due-date')?.value || '';
 
-    const body = { studentName, subject, assignedTo };
+    if (!dueDate) {
+        alert('Please select a due date.');
+        return;
+    }
+
+    const body = { studentName, subject, assignedTo, dueDate };
     if (studentId) body.studentId = studentId;
 
     const res = await fetch(`${API_URL}/evaluation/assign`, {
@@ -157,6 +240,7 @@ async function assignTask() {
     if (res.ok) {
         alert("Task assigned successfully!");
         loadAdminData();
+        loadAnalytics();
     } else {
         alert("Failed to assign task. Check Evaluator ID.");
     }
@@ -189,7 +273,7 @@ function downloadCSV() {
         return;
     }
 
-    const headers = ['Student', 'Subject', 'Evaluator', 'Logic', 'Quality', 'Viva', 'Total', 'Remarks', 'Status'];
+    const headers = ['Student', 'Subject', 'Evaluator', 'Logic', 'Quality', 'Viva', 'Total', 'Due Date', 'Remarks', 'Status'];
     const rows = currentAdminData.map(ev => {
         const scoreObj = ev.score;
         return [
@@ -200,6 +284,7 @@ function downloadCSV() {
             scoreObj ? (scoreObj.quality ?? '') : '',
             scoreObj ? (scoreObj.viva ?? '') : '',
             scoreObj ? (scoreObj.total ?? '') : '',
+            ev.dueDate ? new Date(ev.dueDate).toLocaleDateString() : '',
             `"${(ev.remarks || '').replace(/"/g, '""')}"`,
             ev.isFinal ? 'Completed' : 'Pending'
         ];
@@ -232,17 +317,32 @@ async function loadEvaluatorData() {
         const scoreObj = task.score;
         const totalDisplay = scoreObj ? scoreObj.total : '-';
 
-        const btnState = task.isFinal ? 'disabled style="background:grey"' : `onclick="openModal('${task._id}')"`;
-        const btnText = task.isFinal ? 'Completed' : 'Evaluate';
+        const dueDateStr = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No deadline';
+        const isOverdue = task.dueDate && !task.isFinal && new Date() > new Date(task.dueDate);
+
+        let btnState, btnText;
+        if (task.isFinal) {
+            btnState = 'disabled style="background:grey"';
+            btnText = 'Completed';
+        } else if (isOverdue) {
+            btnState = 'disabled style="background:#d63031;color:white;cursor:not-allowed"';
+            btnText = 'Overdue';
+        } else {
+            btnState = `onclick="openModal('${task._id}')"`;
+            btnText = 'Evaluate';
+        }
 
         const rubricInfo = task.isFinal && scoreObj
             ? `<p>Logic: ${scoreObj.logic} | Quality: ${scoreObj.quality} | Viva: ${scoreObj.viva}</p>`
             : '';
 
+        const overdueBadge = isOverdue ? '<span class="status-overdue">OVERDUE</span>' : '';
+
         const card = `
         <div class="card">
             <h4>${task.studentName}</h4>
             <p>Subject: ${task.subject}</p>
+            <p>Due: ${dueDateStr} ${overdueBadge}</p>
             <p>Status: <span class="${task.isFinal ? 'status-final' : 'status-pending'}">${task.isFinal ? 'Finalized' : 'Pending'}</span></p>
             <p>Total Score: ${task.isFinal ? totalDisplay : '-'}</p>
             ${rubricInfo}
