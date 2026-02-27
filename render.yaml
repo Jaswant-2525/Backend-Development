@@ -15,7 +15,7 @@ services:
         sync: false
 
   # --- Frontend Service (ADD THIS PART) ---
-  - type: static
+  - type: web
     name: fsd-35-frontend
     env: static
     plan: free
