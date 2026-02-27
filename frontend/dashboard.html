@@ -53,10 +53,15 @@
             <div class="card">
                 <h4>Assign New Task</h4>
                 <div class="form-group">
-                    <input type="text" id="task-student" placeholder="Student Name">
+                    <label>Student:</label>
+                    <select id="task-student-select" required>
+                        <option value="">-- Select Student --</option>
+                    </select>
                     <input type="text" id="task-subject" placeholder="Subject">
-                    <input type="text" id="task-evaluator-id" placeholder="Evaluator ID">
-                    <input type="text" id="task-student-id" placeholder="Student User ID (optional)">
+                    <label>Evaluator:</label>
+                    <select id="task-evaluator-select" required>
+                        <option value="">-- Select Evaluator --</option>
+                    </select>
                     <label>Due Date:</label>
                     <input type="date" id="task-due-date">
                     <button onclick="assignTask()">Assign Task</button>

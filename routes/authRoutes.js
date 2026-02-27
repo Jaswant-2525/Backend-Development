@@ -39,6 +39,20 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Get users by role (Admin only)
+router.get('/users/:role', auth, async (req, res) => {
+    try {
+        const role = req.params.role.toUpperCase();
+        if (!['STUDENT', 'EVALUATOR', 'ADMIN'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+        const users = await User.find({ role }).select('_id username');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Profile Management - Update Password
 router.put('/update-password', auth, async (req, res) => {
     const { oldPassword, newPassword } = req.body;

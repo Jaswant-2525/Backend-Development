@@ -101,6 +101,7 @@ function initDashboard() {
         document.getElementById('admin-view').classList.remove('hidden');
         loadAdminData();
         loadAnalytics();
+        populateUserDropdowns();
     } else if (role === 'EVALUATOR') {
         document.getElementById('evaluator-view').classList.remove('hidden');
         loadEvaluatorData();
@@ -236,20 +237,53 @@ async function loadAdminData() {
     });
 }
 
+async function populateUserDropdowns() {
+    const token = localStorage.getItem('token');
+    try {
+        const [studentsRes, evaluatorsRes] = await Promise.all([
+            fetch(`${API_URL}/auth/users/STUDENT`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_URL}/auth/users/EVALUATOR`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        const students = await studentsRes.json();
+        const evaluators = await evaluatorsRes.json();
+
+        const studentSelect = document.getElementById('task-student-select');
+        const evaluatorSelect = document.getElementById('task-evaluator-select');
+
+        students.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s._id;
+            opt.textContent = s.username;
+            studentSelect.appendChild(opt);
+        });
+
+        evaluators.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e._id;
+            opt.textContent = e.username;
+            evaluatorSelect.appendChild(opt);
+        });
+    } catch (err) {
+        console.error('Failed to load user dropdowns:', err);
+    }
+}
+
 async function assignTask() {
-    const studentName = document.getElementById('task-student').value;
+    const studentSelect = document.getElementById('task-student-select');
+    const evaluatorSelect = document.getElementById('task-evaluator-select');
+    const studentId = studentSelect.value;
+    const studentName = studentSelect.options[studentSelect.selectedIndex]?.text || '';
     const subject = document.getElementById('task-subject').value;
-    const assignedTo = document.getElementById('task-evaluator-id').value;
-    const studentId = document.getElementById('task-student-id')?.value || '';
+    const assignedTo = evaluatorSelect.value;
     const dueDate = document.getElementById('task-due-date')?.value || '';
 
-    if (!dueDate) {
-        alert('Please select a due date.');
-        return;
-    }
+    if (!studentId) { alert('Please select a student.'); return; }
+    if (!assignedTo) { alert('Please select an evaluator.'); return; }
+    if (!subject) { alert('Please enter a subject.'); return; }
+    if (!dueDate) { alert('Please select a due date.'); return; }
 
-    const body = { studentName, subject, assignedTo, dueDate };
-    if (studentId) body.studentId = studentId;
+    const body = { studentName, subject, assignedTo, dueDate, studentId };
 
     const res = await fetch(`${API_URL}/evaluation/assign`, {
         method: 'POST',
