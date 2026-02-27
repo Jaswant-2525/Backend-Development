@@ -1,5 +1,25 @@
 const API_URL = "https://fsd-35-backend.onrender.com/api";
 
+// --- THEME / DARK MODE ---
+
+function applyTheme() {
+    const theme = localStorage.getItem('theme') || 'light';
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    const btn = document.getElementById('theme-toggle-btn');
+    if (btn) btn.innerText = theme === 'dark' ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    const btn = document.getElementById('theme-toggle-btn');
+    if (btn) btn.innerText = isDark ? '☀️' : '🌙';
+}
+
 // --- AUTHENTICATION ---
 
 function toggleAuth() {
@@ -71,6 +91,9 @@ function initDashboard() {
         window.location.href = 'index.html';
         return;
     }
+
+    // Apply saved theme
+    applyTheme();
 
     document.getElementById('user-display').innerText = `${username} (${role})`;
 
@@ -370,6 +393,19 @@ async function loadStudentData() {
         const viva = scoreObj ? (scoreObj.viva ?? '-') : '-';
         const total = scoreObj ? (scoreObj.total ?? '-') : '-';
 
+        const pdfBtn = ev.isFinal
+            ? `<button class="pdf-btn" onclick='downloadPDF(${JSON.stringify({
+                studentName: ev.studentName || localStorage.getItem("username"),
+                subject: ev.subject,
+                evaluator: ev.assignedTo ? ev.assignedTo.username : "Unknown",
+                logic: scoreObj?.logic ?? 0,
+                quality: scoreObj?.quality ?? 0,
+                viva: scoreObj?.viva ?? 0,
+                total: scoreObj?.total ?? 0,
+                remarks: ev.remarks || "-"
+            }).replace(/'/g, "&apos;")})'>📄 Download PDF</button>`
+            : '';
+
         const row = `<tr>
             <td>${ev.subject}</td>
             <td>${ev.assignedTo ? ev.assignedTo.username : 'Unknown'}</td>
@@ -381,6 +417,7 @@ async function loadStudentData() {
             <td class="${ev.isFinal ? 'status-final' : 'status-pending'}">
                 ${ev.isFinal ? 'Completed' : 'Pending'}
             </td>
+            <td>${pdfBtn}</td>
         </tr>`;
         tbody.innerHTML += row;
     });
@@ -479,5 +516,55 @@ async function changePassword() {
         closeProfileModal();
     } else {
         alert("Error: " + (data.message || data.error));
+    }
+}
+
+// --- PDF SCORECARD GENERATION ---
+
+async function downloadPDF(data) {
+    // Populate the hidden scorecard template
+    document.getElementById('sc-student').innerText = data.studentName;
+    document.getElementById('sc-subject').innerText = data.subject;
+    document.getElementById('sc-evaluator').innerText = data.evaluator;
+    document.getElementById('sc-date').innerText = new Date().toLocaleDateString();
+    document.getElementById('sc-logic').innerText = data.logic;
+    document.getElementById('sc-quality').innerText = data.quality;
+    document.getElementById('sc-viva').innerText = data.viva;
+    document.getElementById('sc-total').innerText = data.total;
+    document.getElementById('sc-remarks').innerText = data.remarks;
+
+    const template = document.querySelector('#scorecard-template .scorecard');
+
+    // Temporarily make visible for rendering (off-screen)
+    const container = document.getElementById('scorecard-template');
+    container.style.left = '0';
+    container.style.position = 'absolute';
+    container.style.zIndex = '-1';
+    container.style.opacity = '0';
+
+    try {
+        const canvas = await html2canvas(template, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/png');
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+        pdf.save(`${data.studentName}_${data.subject}_Scorecard.pdf`);
+    } catch (err) {
+        console.error('PDF generation error:', err);
+        alert('Failed to generate PDF. Please try again.');
+    } finally {
+        // Re-hide
+        container.style.left = '-9999px';
+        container.style.position = 'fixed';
+        container.style.opacity = '';
     }
 }

@@ -6,11 +6,14 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body onload="initDashboard()">
     <nav>
         <h2>Evaluation System</h2>
         <span id="user-display">User</span>
+        <button onclick="toggleTheme()" class="theme-toggle" id="theme-toggle-btn">🌙</button>
         <button onclick="openProfileModal()" class="profile-btn">Profile</button>
         <button onclick="logout()" class="logout-btn">Logout</button>
     </nav>
@@ -114,6 +117,7 @@
                             <th>Total</th>
                             <th>Remarks</th>
                             <th>Status</th>
+                            <th>PDF</th>
                         </tr>
                     </thead>
                     <tbody id="student-table-body"></tbody>
@@ -152,6 +156,46 @@
             <label>New Password:</label>
             <input type="password" id="new-password" placeholder="Enter new password">
             <button onclick="changePassword()">Update Password</button>
+        </div>
+    </div>
+
+    <!-- ========== HIDDEN SCORECARD TEMPLATE (for PDF) ========== -->
+    <div id="scorecard-template">
+        <div class="scorecard">
+            <div class="scorecard-header">
+                <div class="logo-placeholder"></div>
+                <h2>Internal Evaluation System</h2>
+                <p>Official Student Scorecard</p>
+            </div>
+            <div class="scorecard-info">
+                <div><strong>Student:</strong> <span id="sc-student"></span></div>
+                <div><strong>Subject:</strong> <span id="sc-subject"></span></div>
+            </div>
+            <div class="scorecard-info">
+                <div><strong>Evaluator:</strong> <span id="sc-evaluator"></span></div>
+                <div><strong>Date:</strong> <span id="sc-date"></span></div>
+            </div>
+            <table class="scorecard-table">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        <th>Max Marks</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Logic</td><td>40</td><td id="sc-logic"></td></tr>
+                    <tr><td>Code Quality</td><td>30</td><td id="sc-quality"></td></tr>
+                    <tr><td>Viva</td><td>30</td><td id="sc-viva"></td></tr>
+                    <tr class="total-row"><td>Total</td><td>100</td><td id="sc-total"></td></tr>
+                </tbody>
+            </table>
+            <div class="scorecard-remarks">
+                <strong>Remarks:</strong> <span id="sc-remarks"></span>
+            </div>
+            <div class="scorecard-footer">
+                This is a system-generated scorecard. &copy; Internal Evaluation System
+            </div>
         </div>
     </div>
 

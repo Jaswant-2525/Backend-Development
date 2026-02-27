@@ -2,16 +2,76 @@
 :root {
     /* The "AI Tutor" Palette */
     --bg-base: #ffffff;
+    --bg-body: #ffffff;
+    --bg-body-image: 
+        radial-gradient(circle at 90% 10%, rgba(255, 182, 193, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 10% 90%, rgba(162, 155, 254, 0.3) 0%, transparent 40%);
     --brand-gradient: linear-gradient(135deg, #ff6b6b 0%, #a29bfe 100%);
     
     --text-main: #2d3436;
     --text-light: #636e72;
     
     --card-bg: #ffffff;
+    --card-bg-gradient: linear-gradient(to bottom right, #ffffff, #fafafa);
     --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
     --card-border: 1px solid rgba(0,0,0,0.05);
     
+    --input-bg: #fdfdfd;
+    --input-border: #f1f2f6;
+    --input-focus-bg: #fff;
+    
+    --nav-bg: rgba(255, 255, 255, 0.9);
+    --nav-border: 1px solid rgba(0,0,0,0.05);
+    --user-display-bg: white;
+    --user-display-border: #f0f0f0;
+    
+    --table-row-bg: white;
+    --table-header-color: #95a5a6;
+    
+    --modal-overlay: rgba(255, 255, 255, 0.8);
+    --modal-bg: white;
+    --modal-border: #eee;
+    
+    --btn-primary-bg: #000000;
+    --btn-primary-color: white;
+    
     --font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+/* --- DARK MODE OVERRIDES --- */
+body.dark-mode {
+    --bg-base: #1a1a2e;
+    --bg-body: #1a1a2e;
+    --bg-body-image: 
+        radial-gradient(circle at 90% 10%, rgba(255, 107, 107, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 10% 90%, rgba(162, 155, 254, 0.12) 0%, transparent 40%);
+    
+    --text-main: #e0e0e0;
+    --text-light: #a0a0b0;
+    
+    --card-bg: rgba(30, 30, 50, 0.85);
+    --card-bg-gradient: linear-gradient(to bottom right, rgba(30, 30, 50, 0.9), rgba(25, 25, 45, 0.85));
+    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --card-border: 1px solid rgba(255,255,255,0.08);
+    
+    --input-bg: rgba(255,255,255,0.06);
+    --input-border: rgba(255,255,255,0.1);
+    --input-focus-bg: rgba(255,255,255,0.1);
+    
+    --nav-bg: rgba(26, 26, 46, 0.92);
+    --nav-border: 1px solid rgba(255,255,255,0.06);
+    --user-display-bg: rgba(255,255,255,0.08);
+    --user-display-border: rgba(255,255,255,0.1);
+    
+    --table-row-bg: rgba(30, 30, 50, 0.7);
+    --table-header-color: #8888a0;
+    
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --modal-bg: #1e1e32;
+    --modal-border: rgba(255,255,255,0.1);
+    
+    --btn-primary-bg: #6c5ce7;
+    --btn-primary-color: white;
 }
 
 /* --- RESET & BODY --- */
@@ -27,10 +87,8 @@ body {
     overflow-x: hidden;
 
     /* --- THE "CHATBOT" BACKGROUND EFFECT --- */
-    background-color: #ffffff;
-    background-image: 
-        radial-gradient(circle at 90% 10%, rgba(255, 182, 193, 0.4) 0%, transparent 40%),
-        radial-gradient(circle at 10% 90%, rgba(162, 155, 254, 0.3) 0%, transparent 40%);
+    background-color: var(--bg-body);
+    background-image: var(--bg-body-image);
     background-attachment: fixed; 
 }
 
@@ -44,6 +102,7 @@ body {
 
 .auth-container {
     background: var(--card-bg);
+    backdrop-filter: blur(12px);
     padding: 3.5rem;
     border-radius: 24px;
     box-shadow: var(--card-shadow);
@@ -68,10 +127,10 @@ input, select, textarea {
     width: 100%;
     padding: 16px;
     margin: 12px 0;
-    border: 2px solid #f1f2f6;
+    border: 2px solid var(--input-border);
     border-radius: 16px;
     font-size: 1rem;
-    background: #fdfdfd;
+    background: var(--input-bg);
     outline: none;
     color: var(--text-main);
     font-family: inherit;
@@ -79,7 +138,7 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
     border-color: #a29bfe;
-    background: #fff;
+    background: var(--input-focus-bg);
     box-shadow: 0 4px 12px rgba(162, 155, 254, 0.2);
 }
 
@@ -88,8 +147,8 @@ button {
     width: 100%;
     padding: 16px;
     margin-top: 20px;
-    background: #000000;
-    color: white;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-color);
     border: none;
     border-radius: 16px;
     font-size: 1rem;
@@ -116,15 +175,15 @@ a:hover { text-decoration: underline; color: #6c5ce7; }
 
 /* --- NAVIGATION BAR (Layout Fixed) --- */
 nav {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--nav-bg);
     backdrop-filter: blur(12px);
     padding: 1rem 3rem;
     display: flex;
-    align-items: center; /* Centers items vertically */
+    align-items: center;
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: var(--nav-border);
 }
 
 /* 1. Title stays on left */
@@ -145,17 +204,17 @@ nav h2 {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: white;
-    padding: 8px 24px 8px 8px; /* Bigger padding */
+    background: var(--user-display-bg);
+    padding: 8px 24px 8px 8px;
     border-radius: 50px;
-    border: 2px solid #f0f0f0; /* Thicker border */
+    border: 2px solid var(--user-display-border);
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     
     font-weight: 700;
     color: var(--text-main);
-    font-size: 1.05rem; /* Larger font */
+    font-size: 1.05rem;
     
-    margin-left: 25px; /* Creates gap from the Title */
+    margin-left: 25px;
     transition: transform 0.2s ease;
 }
 
@@ -206,7 +265,8 @@ nav h2 {
 }
 
 .card {
-    background: white;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
     padding: 2.5rem;
     margin-bottom: 2rem;
     border-radius: 24px;
@@ -232,7 +292,7 @@ table {
 thead th {
     text-align: left;
     padding: 1rem 1.5rem;
-    color: #95a5a6;
+    color: var(--table-header-color);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -241,7 +301,7 @@ thead th {
 }
 
 tbody tr {
-    background: white;
+    background: var(--table-row-bg);
     border-radius: 16px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.03);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -284,7 +344,8 @@ td:nth-child(4) {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background-image: linear-gradient(to bottom right, #ffffff, #fafafa);
+    background-image: var(--card-bg-gradient);
+    background-color: var(--card-bg);
 }
 
 /* --- STATUS BADGES (Perfectly Centered) --- */
@@ -325,7 +386,7 @@ td:nth-child(4) {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--modal-overlay);
     backdrop-filter: blur(5px);
     display: flex;
     justify-content: center;
@@ -334,13 +395,13 @@ td:nth-child(4) {
 }
 
 .modal-content {
-    background: white;
+    background: var(--modal-bg);
     padding: 3rem;
     border-radius: 24px;
     width: 90%;
     max-width: 500px;
     box-shadow: 0 25px 50px rgba(0,0,0,0.1);
-    border: 1px solid #eee;
+    border: 1px solid var(--modal-border);
 }
 
 .close {
@@ -478,7 +539,8 @@ td:nth-child(4) {
 }
 
 .stat-card {
-    background: white;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
     padding: 2rem;
     border-radius: 24px;
     box-shadow: var(--card-shadow);
@@ -537,6 +599,15 @@ td:nth-child(4) {
     width: 100% !important;
 }
 
+/* --- FIX: Restore table-cell display when status badges are on <td> --- */
+td.status-final,
+td.status-pending,
+td.status-overdue {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
 /* --- OVERDUE BADGE --- */
 .status-overdue {
     display: inline-flex;
@@ -558,4 +629,178 @@ td:nth-child(4) {
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
+}
+
+/* --- DARK MODE TOGGLE BUTTON --- */
+.theme-toggle {
+    width: auto;
+    background: var(--user-display-bg);
+    border: 2px solid var(--user-display-border);
+    padding: 8px 16px;
+    margin-left: 12px;
+    margin-top: 0;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+/* Auth page theme toggle (positioned top-right) */
+.auth-theme-toggle {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: auto;
+    background: var(--card-bg);
+    border: 2px solid var(--input-border);
+    padding: 10px 18px;
+    margin: 0;
+    font-size: 1.3rem;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: var(--card-shadow);
+    z-index: 200;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.auth-theme-toggle:hover {
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* --- PDF DOWNLOAD BUTTON --- */
+.pdf-btn {
+    width: auto;
+    display: inline-block;
+    background: linear-gradient(135deg, #e17055, #d63031);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    margin: 4px 0 0 0;
+    font-size: 0.8rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(214, 48, 49, 0.25);
+}
+
+.pdf-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(214, 48, 49, 0.35);
+}
+
+/* --- SCORECARD TEMPLATE (Hidden, for PDF rendering) --- */
+#scorecard-template {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    z-index: -1;
+}
+
+.scorecard {
+    width: 700px;
+    padding: 40px;
+    background: #ffffff;
+    color: #000000;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+.scorecard-header {
+    text-align: center;
+    border-bottom: 3px solid #2d3436;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+}
+
+.scorecard-header .logo-placeholder {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+    background: linear-gradient(135deg, #ff6b6b, #a29bfe);
+    border-radius: 50%;
+}
+
+.scorecard-header h2 {
+    margin: 4px 0;
+    font-size: 1.5rem;
+    color: #2d3436;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+}
+
+.scorecard-header p {
+    margin: 2px 0;
+    font-size: 0.85rem;
+    color: #636e72;
+}
+
+.scorecard-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+}
+
+.scorecard-info div {
+    color: #2d3436;
+}
+
+.scorecard-info strong {
+    color: #2d3436;
+}
+
+.scorecard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.scorecard-table th,
+.scorecard-table td {
+    border: 1px solid #ddd;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.95rem;
+    color: #2d3436;
+    background: #ffffff;
+}
+
+.scorecard-table th {
+    background: #f5f6fa;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: #2d3436;
+}
+
+.scorecard-table .total-row {
+    background: #f0f0f0;
+    font-weight: 700;
+}
+
+.scorecard-remarks {
+    padding: 12px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    color: #2d3436;
+}
+
+.scorecard-footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #999;
+    border-top: 1px solid #eee;
+    padding-top: 16px;
 }
