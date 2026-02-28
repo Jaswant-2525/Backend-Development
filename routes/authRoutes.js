@@ -1,14 +1,32 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';           // 3. Brute Force Protection
 import User from '../models/User.js'; 
 import { auth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// --- Login Rate Limiter: max 5 attempts per IP every 15 minutes ---
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,   // 15 minutes
+    max: 5,                      // 5 attempts per window
+    message: { message: 'Too many login attempts. Please try again after 15 minutes.' },
+    standardHeaders: true,       // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false         // Disable `X-RateLimit-*` headers
+});
+
 router.post('/register', async (req, res) => {
     const { username, password, role } = req.body;
     try {
+        // Validate raw password complexity before hashing
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({ 
+                message: 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.' 
+            });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, password: hashedPassword, role });
         await newUser.save();
@@ -18,7 +36,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await User.findOne({ username });
