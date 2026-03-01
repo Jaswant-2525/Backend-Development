@@ -13,12 +13,17 @@ connectDB();
 
 const app = express();
 
+// --- NEW: Render Proxy Setting ---
+// Tells Express to trust Render's load balancer so it doesn't block legitimate traffic
+app.set('trust proxy', 1);
+
 // --- Core Middleware ---
 app.use(express.json());
 app.use(cors());
 
-// --- Enterprise Security Middleware ---
-app.use(helmet());            // Sets secure HTTP headers (X-Content-Type, HSTS, etc.)
+// --- UPDATED: Enterprise Security Middleware ---
+// Relaxed the Cross-Origin policy so your frontend domain is allowed to connect
+app.use(helmet({ crossOriginResourcePolicy: false }));            
 app.use(mongoSanitize());     // Strips $ and . from req.body/query/params to prevent NoSQL injection
 
 app.use('/api/auth', authRoutes);
