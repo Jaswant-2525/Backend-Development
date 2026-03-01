@@ -3,49 +3,57 @@
 ## 📌 Project Overview
 This project is a comprehensive **Full-Stack Internal Evaluation Management System** designed to streamline and automate the process of assessing student submissions. 
 
-Built with scalability and security in mind, the system supports a 3-tier Role-Based Access Control (RBAC) architecture, enabling **Administrators** to assign and monitor tasks, **Evaluators** to grade submissions using detailed rubrics, and **Students** to view their finalized results. The system enforces strict **data persistence**, **deadline management**, and **score finality** to ensure the integrity of the evaluation process.
+Built with scalability, user experience, and enterprise security in mind, the system supports a 3-tier Role-Based Access Control (RBAC) architecture. It enables **Administrators** to seamlessly assign tasks via dynamic UI components, **Evaluators** to grade submissions using detailed rubrics, and **Students** to view their finalized results. The system enforces strict **data persistence**, **deadline management**, **score finality**, and **advanced API security** to ensure the complete integrity of the evaluation process.
 
 ---
 
 ## 🚀 Live Deployment
 
-* **🌐 Live Application:** [https://fsd-35-frontend.onrender.com](https://fsd-35-frontend.onrender.com)
+* **🌐 Live Frontend:** [https://fsd-35-frontend.onrender.com](https://fsd-35-frontend.onrender.com)
+* **⚙️ Live Backend API:** `https://fsd-35-backend.onrender.com`
 
 ---
 
 ## ✨ Key Features
+* **Enterprise-Grade Security:** Fortified against Brute Force attacks (Rate Limiting), Cross-Site Scripting (Helmet CORS), and NoSQL Injection (Express Mongo Sanitize w/ Express 5 compatibility).
+* **Enhanced Admin UX:** Dynamic database-driven `<select>` dropdowns for assigning Users and Evaluators, replacing manual ObjectId entry.
+* **UI/UX & Accessibility:** Integrated Dark Mode theming and PDF Generation for downloading evaluation reports.
 * **Advanced Analytics Dashboard:** Visualizes evaluation progress and calculates average scores per subject using MongoDB Aggregation Pipelines and Chart.js.
 * **Role-Based Access Control (RBAC):** Secure routing and tailored dashboards for Admins, Evaluators, and Students.
 * **Deadline Enforcement:** Automated system locking prevents evaluations from being submitted past the assigned due date.
 * **Detailed Grading Rubrics:** Replaces single-number scores with granular breakdowns (Logic, Quality, Viva, Total).
-* **Data Export:** Built-in capability for Administrators to export evaluation data to CSV files for offline processing.
 * **Search & Filtering:** Dynamic, real-time table filtering by student name, subject, or completion status.
 
 ---
 
 ## 🛠 Tech Stack
 
+
 ### Frontend
-* **HTML5 / CSS3:** Modern, responsive UI with glassmorphism effects and gradient typography.
-* **JavaScript (Vanilla):** Client-side routing, DOM manipulation, and secure `fetch` API integration.
-* **Chart.js:** Data visualization for the Admin analytics dashboard.
+* **HTML5 / CSS3:** Modern, responsive UI with glassmorphism effects, gradient typography, and Dark Mode support.
+* **JavaScript (Vanilla):** Client-side routing, DOM manipulation, dynamic dropdown population, and secure `fetch` API integration.
+* **Libraries:** Chart.js (Data visualization), PDF Generation utilities.
 
 ### Backend
 * **Runtime Environment:** Node.js
-* **Framework:** Express.js
+* **Framework:** Express.js (v5)
 * **Database:** MongoDB (Mongoose ODM)
 * **Authentication:** JWT (JSON Web Tokens)
-* **Security:** Bcrypt.js for secure password hashing, CORS protection, Environment Variables.
+* **Security Middleware:** * `bcryptjs` (Password hashing)
+  * `helmet` (Secure HTTP headers & CORS policy)
+  * `express-rate-limit` (Brute-force protection via Render proxy trust)
+  * `express-mongo-sanitize` (NoSQL injection defense)
 
 ---
 
 ## 👥 User Roles & Permissions
 
+
 ### 1. ADMIN (System Administrators)
 * **Analytics Dashboard:** View high-level metrics (Total, Pending, Completed) and average score bar charts.
-* **Manage Assignments:** Create submissions, assign them to Evaluators, and set strict **Due Dates**.
+* **Manage Assignments:** Create submissions, assign them via dynamic user dropdowns, and set strict **Due Dates**.
 * **System Override:** Can unlock finalized submissions for re-evaluation if required.
-* **Data Management:** View all records, search/filter, and export data to CSV.
+* **Data Management:** View all records, search/filter, export data to CSV, and generate PDFs.
 
 ### 2. EVALUATOR (Staff / Graders)
 * **Task Management:** View only tasks specifically assigned to them.
@@ -69,7 +77,7 @@ Stores credential and role information.
 ### Submissions Collection (`submissions`)
 Stores the evaluation data, relational links, and rubric scores.
 * `studentName`: String
-* `studentId`: ObjectId (Reference to User, default: null)
+* `studentId`: ObjectId (Reference to User)
 * `subject`: String
 * `assignedTo`: ObjectId (Reference to User)
 * `dueDate`: Date
@@ -81,12 +89,12 @@ Stores the evaluation data, relational links, and rubric scores.
 
 ## 🔌 API Endpoints
 
-### Authentication & Profile
+### Authentication & Users
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | Authenticate and receive JWT (Rate Limited) | Public |
 | `POST` | `/api/auth/register` | Register a new user | Public |
-| `POST` | `/api/auth/login` | Authenticate and receive JWT | Public |
-| `PUT` | `/api/auth/update-password` | Update account password | Authenticated |
+| `GET` | `/api/auth/users/:role` | Fetch Users by specific role for UI dropdowns | **Admin** |
 
 ### Evaluation Management
 | Method | Endpoint | Description | Access |
