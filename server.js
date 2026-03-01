@@ -21,6 +21,16 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(cors());
 
+app.use((req, res, next) => {
+    Object.defineProperty(req, 'query', {
+        value: { ...req.query },
+        writable: true,
+        configurable: true,
+        enumerable: true
+    });
+    next();
+});
+
 // --- UPDATED: Enterprise Security Middleware ---
 // Relaxed the Cross-Origin policy so your frontend domain is allowed to connect
 app.use(helmet({ crossOriginResourcePolicy: false }));            
